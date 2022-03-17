@@ -22,8 +22,6 @@ from gazebo_msgs.srv import (
 
 import baxter_interface
 import moveit_commander
-import spawn_chessboard
-import delete_chessgame
 
 
 class PickAndPlaceMoveIt(object):
@@ -121,19 +119,9 @@ class PickAndPlaceMoveIt(object):
         # retract to clear object
         self._retract()
 
-
-
-
 def main():
     moveit_commander.roscpp_initialize(sys.argv)
     rospy.init_node("ik_pick_and_place_moveit")
-
-    # Load Gazebo Models via Spawning Services
-    # Note that the models reference is the /world frame
-    # and the IK operates with respect to the /base frame
-    # load_gazebo_models()
-    # Remove models from the scene on shutdown
-    # rospy.on_shutdown(delete_gazebo_models)
 
     # Wait for the All Clear from emulator startup
     rospy.wait_for_message("/robot/sim/started", Empty)
@@ -146,26 +134,10 @@ def main():
     # NOTE: Gazebo and Rviz has different origins, even though they are connected. For this
     # we need to compensate for this offset which is 0.93 from the ground in gazebo to
     # the actual 0, 0, 0 in Rviz.
-    starting_pose = Pose(
-        position=Point(x=0.7, y=0.135, z=0.35),
-        orientation=overhead_orientation)
+    
+    starting_pose = Pose(position=Point(x=0.7, y=0.135, z=0.35), orientation=overhead_orientation)
+        
     pnp = PickAndPlaceMoveIt(limb, hover_distance)
-
-    #block_poses = list()
-    # The Pose of the block in its initial location.
-    # You may wish to replace these poses with estimates
-    # from a perception node.
-
-    # NOTE: Remember that there's an offset in Rviz wrt Gazebo. We need
-    # to command MoveIt! to go below because the table is 74 cm height.
-    # Since the offset is 0.93, we just simply need to substract
-    # 0.74 - 0.93 = -0.15 in Z
-    #block_poses.append(Pose(
-    #    position=Point(x=0.7, y=0.135, z=-0.14),
-    #    orientation=overhead_orientation))
-    # Feel free to add additional desired poses for the object.
-    # Each additional pose will get its own pick and place.
-    #block_poses.append(Pose(position=Point(x=0.7, y=-0.135, z=-0.14),orientation=overhead_orientation))
 
     # Move to the desired starting angles
     pnp.move_to_start(starting_pose)
@@ -179,21 +151,20 @@ def main():
     place_position_poses = []
     
     for i in pick_positions:
-    	pose1 = piece_positions[i]
-    	pick_position_poses.append(Pose(position=Point(x=pose1[0], y=pose1[1], z=pose1[2]),orientation=overhead_orientation))
+        pose1 = piece_positions[i]
+        pick_position_poses.append(Pose(position=Point(x=pose1[0], y=pose1[1], z=pose1[2]),orientation=overhead_orientation))
     
     for j in place_positions:
-    	pose2 = piece_positions[j]
-    	place_position_poses.append(Pose(position=Point(x=pose2[0], y=pose2[1], z=pose2[2]),orientation=overhead_orientation))
-    	    
-    
-    idx = 0
-    if not rospy.is_shutdown():
-    	for i in range(5):
-        	print("\nPicking "+ pick_positions[i]+"...")
-        	pnp.pick(pick_position_poses[i])
-        	print("\nPlacing "+ place_positions[i]+"...")
-        	pnp.place(place_position_poses[i])
+        pose2 = piece_positions[j]
+        place_position_poses.append(Pose(position=Point(x=pose2[0], y=pose2[1], z=pose2[2]),orientation=overhead_orientation))
+        
+           
+    while not rospy.is_shutdown():
+        for i in range(5):
+            print("\nPicking...")
+            pnp.pick(pick_position_poses[i])
+            print("\nPlacing...")
+            pnp.place(place_position_poses[i])
     return 0
 
 
