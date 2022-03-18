@@ -144,8 +144,10 @@ def main():
     
     piece_positions = rospy.get_param('piece_target_position_map')
     
-    pick_positions = ['13', '63', '14', '64', '01']
-    place_positions = ['33', '43', '24', '54', '22']
+    # grid references to pick from
+    pick_positions = ['70', '20', '57', '07', '47']
+    # grid references for chess move
+    place_positions = ['75', '30', '47', '17', '37']
     
     pick_position_poses = []
     place_position_poses = []
